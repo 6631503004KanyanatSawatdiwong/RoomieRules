@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "db:init": "node -e \"require('./src/lib/db.ts').initDatabase()\"",
+    "db:reset": "rm -f roomie-rules.db && npm run db:init",
+    "clean": "rm -rf .next out dist",
+    "build:analyze": "ANALYZE=true npm run build",
+    "export": "next build && next export"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",
