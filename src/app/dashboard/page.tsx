@@ -88,23 +88,45 @@ export default function DashboardPage() {
               </h3>
               <div className="space-y-3">
                 {user?.role === 'host' ? (
-                  <div className="text-center py-4">
-                    <p className="text-gray-600 mb-4">
-                      As a host, you can create a house for your roommates to join.
-                    </p>
-                    <button className="btn btn-primary">
-                      Create House
-                    </button>
-                  </div>
+                  !user?.house_id ? (
+                    <div className="text-center py-4">
+                      <p className="text-gray-600 mb-4">
+                        As a host, you can create a house for your roommates to join.
+                      </p>
+                      <a href="/house/create" className="btn btn-primary">
+                        Create House
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-gray-600 mb-4">
+                        Your house is ready! Start creating bills for your roommates.
+                      </p>
+                      <button className="btn btn-primary">
+                        Create Bill
+                      </button>
+                    </div>
+                  )
                 ) : (
-                  <div className="text-center py-4">
-                    <p className="text-gray-600 mb-4">
-                      Join an existing house using the code provided by your host.
-                    </p>
-                    <button className="btn btn-primary">
-                      Join House
-                    </button>
-                  </div>
+                  !user?.house_id ? (
+                    <div className="text-center py-4">
+                      <p className="text-gray-600 mb-4">
+                        Join an existing house using the code provided by your host.
+                      </p>
+                      <a href="/house/join" className="btn btn-primary">
+                        Join House
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-gray-600 mb-4">
+                        Welcome to your house! You can now view bills and create shared expenses.
+                      </p>
+                      <button className="btn btn-primary">
+                        View Bills
+                      </button>
+                    </div>
+                  )
                 )}
               </div>
             </div>

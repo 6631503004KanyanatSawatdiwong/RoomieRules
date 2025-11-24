@@ -30,17 +30,17 @@
   - Add protected route wrapper component for authenticated pages
 
 ### House Management
-- [ ] **T006: Create House Management Models**
+- [x] **T006: Create House Management Models** ✅ *Completed Nov 24, 2025*
   - Build database models and API routes for houses
   - Implement /api/houses (POST create, GET user's house) and /api/houses/join (POST join by code)
   - Generate unique 6-character house codes
 
-- [ ] **T007: Build Host House Creation**
+- [x] **T007: Build Host House Creation** ✅ *Completed Nov 24, 2025*
   - Create house creation page (/house/create) for hosts only
   - Include form for house name and bank account number
   - Auto-generate house code and display it for sharing with roommates
 
-- [ ] **T008: Build Roommate House Joining**
+- [x] **T008: Build Roommate House Joining** ✅ *Completed Nov 24, 2025*
   - Create house joining page (/house/join) for roommates
   - Simple form with house code input field
   - Validate code exists and add user to house with roommate role
@@ -107,12 +107,12 @@
 
 ## 📊 Progress Summary
 - **Total Tasks**: 20
-- **Completed**: 5
+- **Completed**: 8
 - **In Progress**: 0
-- **Remaining**: 15
+- **Remaining**: 12
 
 ## 🎯 Current Sprint Focus
-Authentication system completed! Next up: T006-T008 House Management
+House management completed! Next up: T009-T013 Bill Management System
 
 ---
 
@@ -144,3 +144,15 @@ When completing a task, update the status using this format:
 - ✅ Dashboard page shows user info and next steps based on role
 - 🔒 Secure authentication flow: register → auto-login → dashboard redirect
 - 📱 Mobile-optimized forms with touch-friendly inputs and proper validation
+
+### T006-T008 Implementation Notes (Nov 24, 2025)
+- ✅ House management API routes: /api/houses (CREATE/GET), /api/houses/join (POST), /api/houses/[id]/members (GET)
+- ✅ Automatic 6-character house code generation with uniqueness validation
+- ✅ Host house creation page with form validation and success flow
+- ✅ Roommate house joining page with code validation and uppercase formatting
+- ✅ Role-based access control (hosts create, roommates join)
+- ✅ Database integration for house creation and member management
+- ✅ Copy-to-clipboard functionality for house codes
+- ✅ Success pages with clear next steps and house information
+- 📱 Mobile-optimized forms with proper input formatting and validation
+- 🏠 Dashboard integration showing different actions based on house membership status
