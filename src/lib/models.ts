@@ -1,5 +1,5 @@
 import db from './db';
-import { User, House, Bill, BillPayment } from './types';
+import { User, House, Bill, BillPayment, HouseRule } from './types';
 
 // User operations
 export function createUser(userData: {
@@ -180,4 +180,93 @@ export function updateBillPayment(billId: number, userId: number, updates: {
     
     stmt.run(...values, billId, userId);
   }
+}
+
+export function getUserPayments(userId: number, options?: {
+  status?: 'pending' | 'paid';
+  limit?: number;
+}): (BillPayment & { bill_title: string; bill_type: string; bill_amount: number })[] {
+  let query = `
+    SELECT bp.*, b.title as bill_title, b.type as bill_type, b.amount as bill_amount
+    FROM bill_payments bp
+    JOIN bills b ON bp.bill_id = b.id
+    WHERE bp.user_id = ?
+  `;
+  
+  const params: any[] = [userId];
+  
+  if (options?.status) {
+    query += ' AND bp.status = ?';
+    params.push(options.status);
+  }
+  
+  query += ' ORDER BY bp.created_at DESC';
+  
+  if (options?.limit) {
+    query += ' LIMIT ?';
+    params.push(options.limit);
+  }
+  
+  const stmt = db.prepare(query);
+  return stmt.all(...params) as (BillPayment & { bill_title: string; bill_type: string; bill_amount: number })[];
+}
+
+// House Rules functions
+export function createHouseRule(houseId: number, createdBy: number, title: string, description?: string): HouseRule {
+  const stmt = db.prepare(`
+    INSERT INTO house_rules (house_id, title, description, created_by)
+    VALUES (?, ?, ?, ?)
+  `);
+  
+  const result = stmt.run(houseId, title, description || null, createdBy);
+  return getHouseRuleById(result.lastInsertRowid as number)!;
+}
+
+export function getHouseRuleById(id: number): HouseRule | null {
+  const stmt = db.prepare('SELECT * FROM house_rules WHERE id = ?');
+  return stmt.get(id) as HouseRule | null;
+}
+
+export function getHouseRules(houseId: number): HouseRule[] {
+  const stmt = db.prepare(`
+    SELECT hr.*, u.name as created_by_name
+    FROM house_rules hr
+    LEFT JOIN users u ON hr.created_by = u.id
+    WHERE hr.house_id = ?
+    ORDER BY hr.created_at ASC
+  `);
+  return stmt.all(houseId) as (HouseRule & { created_by_name: string })[];
+}
+
+export function updateHouseRule(id: number, updates: {
+  title?: string;
+  description?: string;
+}): HouseRule | null {
+  const fields = [];
+  const values = [];
+  
+  if (updates.title !== undefined) {
+    fields.push('title = ?');
+    values.push(updates.title);
+  }
+  
+  if (updates.description !== undefined) {
+    fields.push('description = ?');
+    values.push(updates.description);
+  }
+  
+  if (fields.length === 0) {
+    return getHouseRuleById(id);
+  }
+  
+  const query = `UPDATE house_rules SET ${fields.join(', ')} WHERE id = ?`;
+  const stmt = db.prepare(query);
+  
+  stmt.run(...values, id);
+  return getHouseRuleById(id);
+}
+
+export function deleteHouseRule(id: number): void {
+  const stmt = db.prepare('DELETE FROM house_rules WHERE id = ?');
+  stmt.run(id);
 }
