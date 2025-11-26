@@ -6,10 +6,10 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function Home() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!loading) {
+    if (!isLoading) {
       if (user) {
         // User is authenticated, redirect to dashboard
         router.replace('/dashboard');
@@ -18,7 +18,7 @@ export default function Home() {
         router.replace('/login');
       }
     }
-  }, [user, loading, router]);
+  }, [user, isLoading, router]);
 
   // Show loading spinner while checking authentication
   return (

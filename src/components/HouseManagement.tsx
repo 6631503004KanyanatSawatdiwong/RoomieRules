@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Home, Copy, CheckCircle, Users, Trash2, AlertTriangle } from 'lucide-react';
+import { Home, Copy, CheckCircle, Users, Trash2, AlertTriangle, Edit3, X, Check } from 'lucide-react';
 
 interface House {
   id: number;
@@ -26,6 +26,9 @@ export const HouseManagement: React.FC<HouseManagementProps> = ({
   const [copySuccess, setCopySuccess] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(house.name);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const copyHouseCode = async () => {
     try {
@@ -43,6 +46,44 @@ export const HouseManagement: React.FC<HouseManagementProps> = ({
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     }
+  };
+
+  const handleUpdateHouseName = async () => {
+    if (!editName.trim()) {
+      alert('House name cannot be empty');
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/houses', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: editName.trim() }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setIsEditing(false);
+        onHouseUpdated(); // Refresh house data
+      } else {
+        alert('Failed to update house name: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      alert('Network error occurred while updating house name');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditName(house.name); // Reset to original name
+    setIsEditing(false);
   };
 
   const handleDeleteHouse = async () => {
@@ -76,7 +117,51 @@ export const HouseManagement: React.FC<HouseManagementProps> = ({
       <div className="space-y-4">
           {/* House Info */}
           <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-3">"{house.name}"</h4>
+            <div className="flex items-center justify-between mb-3">
+              {isEditing ? (
+                <div className="flex items-center space-x-2 flex-1">
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="flex-1 px-3 py-1 border border-blue-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="House name"
+                    disabled={isUpdating}
+                  />
+                  <button
+                    onClick={handleUpdateHouseName}
+                    disabled={isUpdating || !editName.trim()}
+                    className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                    title="Save"
+                  >
+                    {isUpdating ? (
+                      <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={isUpdating}
+                    className="p-1 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                    title="Cancel"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <h4 className="font-medium text-gray-900">"{house.name}"</h4>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                    title="Edit house name"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">House Code</span>

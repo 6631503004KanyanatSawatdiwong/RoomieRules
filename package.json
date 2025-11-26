@@ -8,11 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
+    "test": "npm run type-check && npm run test:simple",
+    "test:simple": "node tests/simple-test.js",
     "db:init": "node -e \"require('./src/lib/db.ts').initDatabase()\"",
     "db:reset": "rm -f roomie-rules.db && npm run db:init",
-    "clean": "rm -rf .next out dist",
-    "build:analyze": "ANALYZE=true npm run build",
-    "export": "next build && next export"
+    "clean": "rm -rf .next out dist"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",

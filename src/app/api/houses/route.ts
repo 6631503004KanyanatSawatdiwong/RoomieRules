@@ -170,6 +170,109 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// PUT - Update house name (Host only)
+export async function PUT(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get('authorization');
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'Authorization token required'
+      }, { status: 401 });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = verifyToken(token);
+    
+    if (!decoded) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'Invalid or expired token'
+      }, { status: 401 });
+    }
+
+    const user = getUserById(decoded.userId);
+    if (!user) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'User not found'
+      }, { status: 404 });
+    }
+
+    if (user.role !== 'host') {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'Only hosts can update house details'
+      }, { status: 403 });
+    }
+
+    if (!user.house_id) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'You do not have a house to update'
+      }, { status: 400 });
+    }
+
+    const house = getHouseById(user.house_id);
+    if (!house || house.host_id !== user.id) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'You can only update your own house'
+      }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { name } = body;
+
+    if (!name || !name.trim()) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'House name is required'
+      }, { status: 400 });
+    }
+
+    // Update house name
+    const db = require('@/lib/db').default;
+    const updateStmt = db.prepare('UPDATE houses SET name = ? WHERE id = ?');
+    updateStmt.run(name.trim(), user.house_id);
+
+    // Get updated house info
+    const { getHouseMemberCount } = require('@/lib/models');
+    const updatedHouse = getHouseById(user.house_id);
+    
+    if (!updatedHouse) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'House not found after update'
+      }, { status: 404 });
+    }
+    
+    const memberCount = getHouseMemberCount(user.house_id);
+
+    return NextResponse.json<ApiResponse>({
+      success: true,
+      data: { 
+        house: {
+          id: updatedHouse.id,
+          name: updatedHouse.name,
+          house_code: updatedHouse.house_code,
+          host_id: updatedHouse.host_id,
+          member_count: memberCount,
+          is_host: true
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Update house error:', error);
+    return NextResponse.json<ApiResponse>({
+      success: false,
+      error: 'An error occurred while updating the house'
+    }, { status: 500 });
+  }
+}
+
 // DELETE - Delete house (Host only)
 export async function DELETE(request: NextRequest) {
   try {
