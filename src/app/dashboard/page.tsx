@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { HouseManagement } from '@/components/HouseManagement';
 import { LogOut, Home, User, Receipt, DollarSign, TrendingUp, Calendar, Users, Search } from 'lucide-react';
 
 interface Analytics {
@@ -52,10 +53,13 @@ export default function DashboardPage() {
   const router = useRouter();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  const [houseInfo, setHouseInfo] = useState<any>(null);
+  const [loadingHouse, setLoadingHouse] = useState(false);
 
   useEffect(() => {
     if (user?.house_id) {
       loadAnalytics();
+      loadHouseInfo();
     }
   }, [user?.house_id]);
 
@@ -77,6 +81,27 @@ export default function DashboardPage() {
       console.error('Failed to load analytics:', error);
     } finally {
       setLoadingAnalytics(false);
+    }
+  };
+
+  const loadHouseInfo = async () => {
+    try {
+      setLoadingHouse(true);
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/houses', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (data.success && data.data.house) {
+        setHouseInfo(data.data.house);
+      }
+    } catch (error) {
+      console.error('Failed to load house info:', error);
+    } finally {
+      setLoadingHouse(false);
     }
   };
 
@@ -102,6 +127,18 @@ export default function DashboardPage() {
   const getChangePercentage = (current: number, previous: number) => {
     if (previous === 0) return current > 0 ? 100 : 0;
     return ((current - previous) / previous) * 100;
+  };
+
+  const handleHouseDeleted = () => {
+    // Refresh page or redirect to force re-authentication
+    window.location.reload();
+  };
+
+  const handleHouseUpdated = () => {
+    loadHouseInfo();
+    if (user?.house_id) {
+      loadAnalytics();
+    }
   };
 
   return (
@@ -274,6 +311,8 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
+
+
               </>
             )}
 
@@ -282,6 +321,14 @@ export default function DashboardPage() {
               <div className="card text-center">
                 <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                 <p className="text-gray-600">Loading analytics...</p>
+              </div>
+            )}
+
+            {/* Loading House Info for Hosts */}
+            {user?.role === 'host' && user?.house_id && !houseInfo && loadingHouse && (
+              <div className="card text-center">
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading house information...</p>
               </div>
             )}
 
@@ -311,6 +358,8 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
+
+
 
             {/* Quick Actions */}
             {user?.house_id && (
@@ -348,6 +397,37 @@ export default function DashboardPage() {
                     <span className="text-sm font-medium text-gray-900">House Rules</span>
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* House Management Section - Only for hosts */}
+            {user?.role === 'host' && user?.house_id && (
+              <div className="card">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  House Management
+                </h3>
+                {loadingHouse ? (
+                  <div className="text-center py-4">
+                    <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="text-gray-600">Loading house information...</p>
+                  </div>
+                ) : houseInfo ? (
+                  <HouseManagement 
+                    house={houseInfo}
+                    onHouseDeleted={handleHouseDeleted}
+                    onHouseUpdated={handleHouseUpdated}
+                  />
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-red-600">Failed to load house information</p>
+                    <button 
+                      onClick={loadHouseInfo}
+                      className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      Try again
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -401,15 +481,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Debug Info (for development) */}
-            <div className="card bg-gray-50">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                Debug Info (Development)
-              </h3>
-              <pre className="text-xs text-gray-600 overflow-auto">
-                {JSON.stringify(user, null, 2)}
-              </pre>
-            </div>
+
           </div>
         </main>
       </div>

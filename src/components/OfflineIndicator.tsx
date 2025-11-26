@@ -1,13 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { WifiOff, Wifi } from 'lucide-react';
 import { useOnlineStatus } from '@/hooks';
 
 export const OfflineIndicator: React.FC = () => {
   const isOnline = useOnlineStatus();
+  const [mounted, setMounted] = useState(false);
 
-  if (isOnline) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render until after hydration to prevent mismatch
+  if (!mounted || isOnline) return null;
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white px-4 py-2">
@@ -27,7 +33,7 @@ export const OnlineIndicator: React.FC<{ children: React.ReactNode }> = ({ child
   return (
     <>
       <OfflineIndicator />
-      <div className={isOnline ? '' : 'pt-10'}>
+      <div className={!isOnline ? 'pt-10' : ''}>
         {children}
       </div>
     </>
